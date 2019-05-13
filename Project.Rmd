@@ -1,0 +1,246 @@
+---
+title: "Killing Me Softly"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggrepel)
+```
+
+```{r}
+places <- c("alabama/birmingham", "alaska/anchorage", "arizona/phoenix", "arkansas/little_rock", "california/los_angeles", "colorado/denver", "connecticut/bridgeport", "delaware/wilmington", "florida/jacksonville", "georgia/atlanta", "hawaii/honolulu", "idaho/boise", "illinois/chicago", "indiana/indianapolis", "iowa/des_moines", "kansas/wichita", "kentucky/louisville", "louisiana/new_orleans", "maine/portland", "maryland/baltimore", "massachusetts/boston", "michigan/detroit", "minnesota/minneapolis", "mississippi/jackson", "missouri/kansas_city","montana/billings", "nebraska/omaha", "nevada/las_vegas", "new_hampshire/manchester", "new_jersey/newark", "new_mexico/albuquerque", "new_york/new_york", "north_carolina/charlotte", "north_dakota/fargo", "ohio/columbus", "oklahoma/oklahoma_city", "oregon/portland", "pennsylvania/philadelphia", "rhode_island/providence", "south_carolina/charleston", "south_dakota/sioux_falls", "tennessee/nashville-davidson", "texas/houston", "utah/salt_lake_city", "vermont/burlington", "virginia/virginia_beach", "washington/seattle", "west_virginia/charleston", "wisconsin/milwaukee", "wyoming/cheyenne")
+```
+
+```{r}
+jobs <- tibble(Places = character(), IncomePerCap = character(), HouseholdIncome = character(), UnemploymentRate = character(), RecentJobGrowth = character(), FutureJobGrowth = character())
+
+
+for(i in 1:50) {
+  url <- str_c("https://www.bestplaces.net/jobs/city/", places[i])
+  jobplaces <- read_html(url)
+  jobtables <- html_nodes(jobplaces, css = "table")
+  jobs_data <- html_table(jobtables, header = TRUE, fill = TRUE)[[1]]
+  jobstate <- as_tibble(jobs_data)%>%
+  na.omit()
+  jobtable2 <- jobstate[,2]
+  jobs[i,1] <- names(jobtable2)
+  jobs[i,2] <- jobtable2[1,1]
+  jobs[i,3] <- jobtable2[2,1]
+  jobs[i,4] <- jobtable2[3,1]
+  jobs[i,5] <- jobtable2[4,1]
+  jobs[i,6] <- jobtable2[5,1]
+  print(i)
+}
+
+jobsdatafinal <- jobs
+```
+
+
+```{r}
+ed <- tibble(Places = character(), EdpendPerStudent = character(), EducEdpendPerStudent = character(), IndusEdpendPerStudent = character(), PupilTeacherRatio = character(), StudentsPerLibrarian = character(), StudentsPerCounselor = character())
+
+
+for(i in 1:50) {
+  url <- str_c("https://www.bestplaces.net/education/city/", places[i])
+  edplaces <- read_html(url)
+  edtables <- html_nodes(edplaces, css = "table")
+  ed_data <- html_table(edtables, header = TRUE, fill = TRUE)[[1]]
+  edstate <- as_tibble(ed_data)%>%
+  na.omit()
+  edtable2 <- edstate[,2]
+  ed[i,1] <- names(edtable2)
+  ed[i,2] <- edtable2[1,1]
+  ed[i,3] <- edtable2[2,1]
+  ed[i,4] <- edtable2[3,1]
+  ed[i,5] <- edtable2[4,1]
+  ed[i,6] <- edtable2[5,1]
+  ed[i,7] <- edtable2[6,1]
+  print(i)
+}
+
+eddatafinal <- ed
+```
+
+
+```{r}
+bluewhite <- tibble(Places = character(), Agriculture = character(), Mining = character(), Construction = character(), Manufacturing = character(), Wholesale = character(), Retail = character(), Transportation = character(), Utilities = character(), Information = character(), Finance = character(), Realty = character(), Scientific = character(), Management = character(), Administrative = character(), Education = character(), Health = character(), Arts = character(), Accommodation = character(), Other = character(), PublicAdmin = character())
+
+for(i in 1:50) {
+  url <- str_c("https://www.bestplaces.net/jobs/city/", places[i])
+  bluwhi <- read_html(url)
+  bluwhitable <- html_nodes(bluwhi, css = "table")
+  bluewhi_data <- html_table(bluwhitable, header = TRUE, fill = TRUE)[[3]]
+  bluwhistate <- as_tibble(bluewhi_data)%>%
+  na.omit()
+  bluwhitable2 <- bluwhistate[,2]
+  bluewhite[i,1] <- names(bluwhitable2)
+  bluewhite[i,2] <- bluwhitable2[1,1]
+  bluewhite[i,3] <- bluwhitable2[2,1]
+  bluewhite[i,4] <- bluwhitable2[3,1]
+  bluewhite[i,5] <- bluwhitable2[4,1]
+  bluewhite[i,6] <- bluwhitable2[5,1]
+  bluewhite[i,7] <- bluwhitable2[6,1]
+  bluewhite[i,8] <- bluwhitable2[7,1]
+  bluewhite[i,9] <- bluwhitable2[8,1]
+  bluewhite[i,10] <- bluwhitable2[9,1]
+  bluewhite[i,11] <- bluwhitable2[10,1]
+  bluewhite[i,12] <- bluwhitable2[11,1]
+  bluewhite[i,13] <- bluwhitable2[12,1]
+  bluewhite[i,14] <- bluwhitable2[13,1]
+  bluewhite[i,15] <- bluwhitable2[14,1]
+  bluewhite[i,16] <- bluwhitable2[15,1]
+  bluewhite[i,17] <- bluwhitable2[16,1]
+  bluewhite[i,18] <- bluwhitable2[17,1]
+  bluewhite[i,19] <- bluwhitable2[18,1]
+  bluewhite[i,20] <- bluwhitable2[19,1]
+  bluewhite[i,21] <- bluwhitable2[20,1]
+  print(i)
+}
+
+bluewhitefinal <- bluewhite%>%
+  mutate(Places = str_replace_all(Places, "_", " "))
+
+
+
+bluewhitefinal%>%
+  gather(key = "Occupation", value = "Income", -Places)%>%
+  mutate(Collar = fct_collapse(Occupation,
+                               Blue = c("Agriculture", "Construction", "Manufacturing", "Wholesale", "Retail", "Transportation", "Utilities", "Accommodation", "PublicAdmin"),
+                               White = c("Mining", "Information", "Finance", "Realty", "Scientific", "Management", "Administrative", "Education", "Health", "Arts", "PublicAdmin")))
+```
+
+```{r}
+new <- jobsdatafinal %>%
+  inner_join(eddatafinal, by = c("Places"))
+new[17, "Places"] <- "Louisville, Kentucky"
+
+
+majorcity <- new %>%
+  inner_join(bluewhitefinal, by = c("Places"))%>%
+  mutate(IncomePerCap = parse_number(IncomePerCap),
+         HouseholdIncome = parse_number(HouseholdIncome),
+         UnemploymentRate = parse_number(UnemploymentRate),
+         RecentJobGrowth = parse_number(RecentJobGrowth),
+         FutureJobGrowth = parse_number(FutureJobGrowth),
+         EdpendPerStudent = parse_number(EdpendPerStudent),
+         EducEdpendPerStudent = parse_number(EducEdpendPerStudent),
+         IndusEdpendPerStudent = parse_number(IndusEdpendPerStudent),
+         PupilTeacherRatio = parse_number(PupilTeacherRatio),
+         StudentsPerLibrarian = parse_number(StudentsPerLibrarian),
+         StudentsPerCounselor = parse_number(StudentsPerCounselor))%>%
+  rename(inc_percap = IncomePerCap,
+         hh_inc = HouseholdIncome,
+         unemp_rate = UnemploymentRate,
+         rec_jobgrow = RecentJobGrowth,
+         fut_jobgrow = FutureJobGrowth,
+         expend_perstu = EdpendPerStudent,
+         educexpen_perstu = EducEdpendPerStudent,
+         instrucexp_perstu = IndusEdpendPerStudent,
+         pupilteac_ratio = PupilTeacherRatio,
+         stuper_lib = StudentsPerLibrarian,
+         stuper_couns = StudentsPerCounselor)
+                                    
+```
+
+
+```{r}
+majorcity%>%
+  ggplot(mapping = aes(x = fut_jobgrow, y = expend_perstu))+
+  geom_jitter(alpha = .55)+
+  geom_smooth(method = "loess", se = FALSE)
+  
+
+majorcity %>%
+  ggplot(mapping = aes(x = inc_percap, y = expend_perstu))+
+  geom_jitter(alpha = 1/2)+
+  geom_smooth(method = "loess", se = FALSE, span = .3)+
+  geom_label_repel(aes(label=ifelse(inc_percap < 20000 | inc_percap > 50000 | expend_perstu > 25000, as.character(Places),'')))
+
+
+majorcity%>%
+  ggplot(mapping = aes(x = instrucexp_perstu, y = pupilteac_ratio))+
+  geom_point()+
+  geom_text_repel(aes(label=ifelse(pupilteac_ratio > 20 | pupilteac_ratio < 10, as.character(Places),''),
+    angle        = 360,
+    vjust        = 0,
+    color = TRUE))+
+  theme(legend.position = "none")+
+  coord_flip()
+
+
+ggtitle()
+  xlab()
+  ylab()
+
+```
+
+
+```{r}
+states <- map_data("state")
+
+newheat <- majorcity %>%
+  mutate(Places = tolower(str_split_fixed(Places, ', ', n=2)[,2]))
+
+usamap <- states %>%
+  left_join(newheat, by = c("region" = "Places"))
+
+save(list='usamap',file="usamap.rda")
+save(list = 'states', file = "states.rda")
+
+#####
+
+
+
+
+IncomePerCapmap <- ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = inc_percap), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red") + 
+  labs(fill = "IncomePerCap")
+
+HouseholdIncomemap <- ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = hh_inc), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red")
+
+UnemploymentRatemap <- ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = unemp_rate), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red")
+
+RecentJobGrowthmap <- ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = rec_jobgrow), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red")
+
+FutureJobGrowthmap <- ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = fut_jobgrow), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red")
+
+EdpendPerStudentmap <- ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = expend_perstu), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red")
+
+EducEdpendPerStudentmap <- ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = educexpen_perstu), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red")
+
+IndusEdpendPerStudentmap <- ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = instrucexp_perstu), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red")
+
+PupilTeacherRatiomap <- ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = pupilteac_ratio), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red")
+
+StudentsPerLibrarianmap <- ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = stuper_lib), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red")
+
+StudentsPerCounselormap <- ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = stuper_couns), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red") 
+```
+
+
+

@@ -1,0 +1,174 @@
+---
+title: "Economy + Education : Urban Cities of America"
+runtime: shiny
+output: html_document
+---
+
+```{r, echo = FALSE, warning = FALSE}
+library(tidyverse)
+library(ggplot2)
+library(ggrepel)
+library(rvest)
+load("~/Mscs 264 S19/Inclass/Amber-Baberich/majorcity.rda")
+load("~/Mscs 264 S19/Inclass/Amber-Baberich/states.rda")
+load("~/Mscs 264 S19/Inclass/Amber-Baberich/usamap.rda")
+```
+
+
+###Introduction
+#####According to U.S News, educational disparities are most identifiable when the population is separated by race. There is a substantial amount of research in this field and so we are trying to understand the relationship between educational disparity and economic status. Our research question is: How does economic status relate to educational disparities in the large urban-cities of the United States? The standing hypothesis that we have throughout this project is that economic status and educational disparities have a positive relationship where a change in one will incite change on the other. 
+
+
+###Methodology
+#####We will be using the reported data in the **bestplaces.net**. Using the webscraping method, the gathered information in the tables will be aggregated and compiled to create a new dataframe. Variables within the following broader topics will be selected: a) Economic Measures (ex: Household Income, Income per Capita, etc.) and b) Educational Measurement [Economic] (ex: Expenditure Per Student, Educational Expenditure Per Student, etc.).
+
+
+###Results
+#####To explain the selected variables, Expenditure Per Student are all those that include the exponses on students. This may include meals in schools, the cost of having them stay there, and so on. Educational Expenditure Per Student on the other hand are only expenses that are directly related to the educational expenses on students, including, but not limited to, books, pencils, and markers. Finally, Instructor Expenditure Per Student is the investment per teacher to a student. This includes the salary of the teacher as well as the materials they use in class. Income Per Capita is chosen as the responding variable because we though that higher expenditure on some sort relates to the high income per capita in the said place.  
+
+
+```{r, echo = FALSE, warning = FALSE}
+titlePanel("Expenditure on Education and Income Per Capita")
+
+inputPanel(
+  selectInput("x", label = "Expenditure Variable [x]:",
+    choices = c("Expenditure Per Student" = "expend_perstu",
+                "Educational Expenditure Per Student" = "educexpen_perstu",
+                "Instructor Expenditure Per Student" = "instrucexp_perstu")),
+     checkboxInput("type_check", "Include Trend Line?", value = FALSE))
+
+renderPlot({
+     if (input$type_check)
+        ggplot(majorcity, aes_string(x = input$x, y = "inc_percap"))+
+        geom_jitter(alpha = 1/2)+
+        geom_smooth(se = FALSE, method = "loess", span = .5)+
+        ylab("Income Per Capita")
+    else if (!input$type_check) 
+        ggplot(majorcity, aes_string(x = input$x, y = "inc_percap"))+
+        geom_jitter(alpha = 1/2)+
+        ylab("Income Per Capita")
+})
+```
+
+#####The observation that we have is as follows: 
+#####It seems like there is not a clear indication of the relationship between the variables. This means that higher expenditure on education does not mean that there is a high income per capita in the said city. Although there is no clear trend line observed, this finding is quite telling. This means that there are cities that ahve high income per capita that does not invest in education as much as it can possibly do and vice-versa. Furthermore, this is also interesting if politics and educational policy-making is considered in the discussion. These visualization shows that states can and should do better when advocating for education in their respective cities because their other counterparts could be doing better despite of having lower income per capita.
+
+```{r, echo = FALSE, warning = FALSE}
+majorcity%>%
+  ggplot(mapping = aes(x = rec_jobgrow, y = expend_perstu))+
+  geom_jitter(alpha = .55)+
+  geom_smooth(se = FALSE, method = "loess")+
+  ggtitle("Future Job Growth and Expenditure Per Student")+
+  ylab("Expenditure Per Student")+
+  xlab("Recent Job Growth(%)")
+```
+
+#####An interesting information to look at is whether there is a trend between job growth and expenditure per student. It seems like as recent job growth increase, expenditure per student is seemingly slightly going down. This information, however, is skewed by an outlier that had > 4% increase in job growth. Again, this finding is telling of the state's or city's policies on education and their investment on students. 
+
+```{r, echo = FALSE, warning = FALSE}
+majorcity %>%
+  ggplot(mapping = aes(x = hh_inc, y = educexpen_perstu))+
+  geom_jitter(alpha = 1/2)+
+  geom_label_repel(aes(label=ifelse(hh_inc > 80000 | hh_inc < 30000 | educexpen_perstu > 25000, as.character(Places),''), color = TRUE))+
+  theme(legend.position = "none")+
+  geom_smooth(method = "auto", se = FALSE)+
+  ggtitle("Relationship between Household Income and Educational Expediture Per Student")+
+  xlab("Household Income")+
+  ylab("Educational Expenditure Per Student")
+
+```
+
+#####This visualization shows the relationship between Household Income and Educational Expenditure Per Student. For this, we hypothesized that as HH income increases, Educational Expenditure Per Student increases. This means that as cities have a higher HH income, the more they are likely to invest more on their students. This visualization, however, indicates that there is no clear relationship between HH income and Educational Expenditure. There is an observably a big dip in the Educational Expenditure in between $50,000 to $60,000 household income. The labels indicate some of the outliers in the visualization. Newark, New Jersey, although having a comparably less HH income, has the highest educaitonal expenditure per student. On the otherhand, Alaska who has the highest average HH income at over $80,000 is nearly spending the same for Educational Expenditure as Detroit, only a couple thousand dollars short and having the smallest HH income in all the 50 states. 
+
+```{r, echo = FALSE, warning = FALSE}
+majorcity%>%
+  ggplot(mapping = aes(x = instrucexp_perstu, y = pupilteac_ratio))+
+  geom_point()+
+   geom_label_repel(aes(label=ifelse(pupilteac_ratio > 21 | pupilteac_ratio < 8, as.character(Places),''),
+    angle        = 360,
+    vjust        = 0,
+    color = TRUE))+
+  theme(legend.position = "none")+
+  ggtitle("Pupil-Teacher Ratio and Instructural Expenditure Per Student")+
+  ylab("Pupil-Teacher Ratio")+
+  xlab("Instructural Expenditure Per Student")
+```
+
+#####Pupil-Teacher student ratio is an important thing to consider in term of educational experience for students. Having smaller ratio means that students are able to receive personalized and focused self-development attention from their teachers. We hypothesized that as Pupil-Teacher ratios increase, instructural expenditure per student increases as well. The visualization shows that there is a left skew on the data. It shows on the behavior of states and their investment on education in making personalized and smaller classrooms for students. Los Angeles and Salt Lake City have the highest Pupil-Teacher Ratio and not spending as much as they could. New York City on the otherhand have the smallest ratio between students to teachers. They are also have the highest insrucutral expenditure per student. 
+
+###Heat Maps
+######Disclaimer: The most populated cities represent each respective state in the heat maps. As an example, Birmingham, Alabama represents the entire state of Alabama and so on. 
+
+```{r, echo = FALSE, warning = FALSE}
+ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = inc_percap), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  ggtitle("Income Per Capita") + 
+  labs(fill = "IncomePerCap")
+
+  ggplot(usamap, aes(long, lat, group = group)) +
+    geom_polygon(aes(fill = hh_inc), colour = "black") +
+    scale_fill_gradient(low = "blue", high = "red") +
+    ggtitle("Household Income") + 
+    labs(fill = "HouseholdIncome")
+```
+
+#####The two heatmaps of the United States tells the Income Per Capita and Household Income for each state. These two maps are similiar with each other but this is no surprise. Cities with higher Household Income will have higher Income Per Capita. 
+
+```{r, echo = FALSE, warning = FALSE}
+ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = unemp_rate), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  ggtitle("Unemployment Rate") + 
+  labs(fill = "UnemploymentRate")
+
+ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = rec_jobgrow), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  ggtitle("Recent Job Growth") + 
+  labs(fill = "Job Growth")
+
+ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = fut_jobgrow), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  ggtitle("Future Job Growth") + 
+  labs(fill = "Job Growth")
+```
+#####The three heatmaps above explain the Unemployment Rate, Recent Job Growth, and Future Job Growth in each state. 
+
+```{r, echo = FALSE, warning = FALSE}
+ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = expend_perstu), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  ggtitle("Expenditure Per Student") + 
+  labs(fill = "Expenditure")
+
+ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = instrucexp_perstu), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  ggtitle("Instuctural Expenditure Per Student") + 
+  labs(fill = "Expenditure")
+```
+
+```{r, echo = FALSE, warning = FALSE}
+ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = pupilteac_ratio), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  ggtitle("Pupil Teacher Ratio") + 
+  labs(fill = "Ratio Out of 1")
+
+ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = stuper_lib), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  ggtitle("Students Per Librarian") + 
+  labs(fill = "Ratio Out of 1")
+
+ggplot(usamap, aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = stuper_couns), colour = "black") +
+  scale_fill_gradient(low = "blue", high = "red") +
+  ggtitle("Students Per Counselor") + 
+  labs(fill = "Ratio Out of 1")
+```
+
+###Conclusion
+#####There are a lot of surprises in the data that had been scraped, aggregated, and analyzed. The initial hypothesis that economic status and educational disparities have a positive relationship where a change in one will incite change on the other is contingent upon situations/policies. There is further research that need to be made that should take into consideration current educational policies in place. Although certain cities are more affluent or economically able than others, it is not necessarily true that they are also investing well on education for their younger population and families. Economics function within certain set of policies and defining and identifying educational disparities between the urban cities of the United States of America. 
